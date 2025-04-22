@@ -101,6 +101,27 @@ app.get("/api/facilities/:id/capacity", async (req, res) => {
   }
 });
 
+app.get("/api/facilities/:id/capacity", async (req, res) => {
+  try {
+    const facilityId = req.params.id;
+    const token = await getAccessToken();
+    const response = await fetch(`https://api-integration.ipcontrol.online/api/v1.0/facilities/${facilityId}/capacity`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).send(await response.text());
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error("Error fetching capacity:", err);
+    res.status(500).send("Fout bij ophalen capaciteit");
+  }
+});
+
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
