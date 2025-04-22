@@ -6,6 +6,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+app.use(cors({
+  origin: "https://occupation-integration.ipcontrol.online"
+}));
 const PORT = process.env.PORT || 3000;
 
 const tenantID = process.env.TENANT_ID;
