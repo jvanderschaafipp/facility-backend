@@ -53,6 +53,27 @@ async function apiGet(path) {
   return response.json();
 }
 
+app.get("/api/facilities/:id/capacity", async (req, res) => {
+  try {
+    const facilityId = req.params.id;
+    const token = await getAccessToken(); // jouw JWT ophalen
+    const response = await fetch(`https://api-integration.ipcontrol.online/api/v1.0/facilities/${facilityId}/capacity`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).send(await response.text());
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Fout bij ophalen capaciteit");
+  }
+});
+
+
 app.get("/api/facilities", async (req, res) => {
   try {
     const data = await apiGet("/facilities");
