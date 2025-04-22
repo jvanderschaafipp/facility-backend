@@ -2,7 +2,7 @@
 import express from "express";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
-import cors from 'cors';
+import cors from "cors";
 
 dotenv.config();
 
@@ -53,45 +53,7 @@ async function apiGet(path) {
   return response.json();
 }
 
-app.get("/api/facilities/:id/capacity", async (req, res) => {
-  try {
-    const facilityId = req.params.id;
-    const token = await getAccessToken(); // jouw JWT ophalen
-    const response = await fetch(`https://api-integration.ipcontrol.online/api/v1.0/facilities/${facilityId}/capacity`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    if (!response.ok) {
-      return res.status(response.status).send(await response.text());
-    }
-
-    const data = await response.json();
-    res.json(data);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Fout bij ophalen capaciteit");
-  }
-});
-
-
-app.get("/api/facilities", async (req, res) => {
-  try {
-    const data = await apiGet("/facilities");
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/api/facilities/:id/occupation", async (req, res) => {
-  try {
-    const data = await apiGet(`/facilities/${req.params.id}/occupation`);
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
+// ✅ Eén enkele route voor capaciteit
 app.get("/api/facilities/:id/capacity", async (req, res) => {
   try {
     const data = await apiGet(`/facilities/${req.params.id}/capacity`);
@@ -101,26 +63,32 @@ app.get("/api/facilities/:id/capacity", async (req, res) => {
   }
 });
 
-app.get("/api/facilities/:id/capacity", async (req, res) => {
+// ✅ Haal alle faciliteiten op
+app.get("/api/facilities", async (req, res) => {
   try {
-    const facilityId = req.params.id;
-    const token = await getAccessToken();
-    const response = await fetch(`https://api-integration.ipcontrol.online/api/v1.0/facilities/${facilityId}/capacity`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    if (!response.ok) {
-      return res.status(response.status).send(await response.text());
-    }
-
-    const data = await response.json();
+    const data = await apiGet("/facilities");
     res.json(data);
   } catch (err) {
-    console.error("Error fetching capacity:", err);
-    res.status(500).send("Fout bij ophalen capaciteit");
+    res.status(500).json({ error: err.message });
   }
 });
 
+// ✅ Combineer occupation én capaciteit
+app.get("/api/facilities/:id/occupation", async (req, res) => {
+  try {
+    const occupation = await apiGet(`/facilities/${req.params.id}/occupation`);
+    const capacity = await apiGet(`/facilities/${req.params.id}/capacity`);
+
+    res.json({
+      subscriberOccupation: occupation.subscriberOccupation,
+      transientOccupation: occupation.transientOccupation,
+      totalOccupation: occupation.totalOccupation,
+      totalCapacity: capacity.totalCapacity // 🎉 Dit is wat je nodig had
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
